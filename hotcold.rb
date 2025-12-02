@@ -1,14 +1,18 @@
+Any = "***"
+
+
 def run_bprogram(bthreads, steps = 10)
   syncs = {}
+  
 
   # התחלה: כל bthread נותן את ה-sync הראשון שלו
-  bthreads.each do |bt|
+  bthreads.each do |bt| 
     syncs[bt] = bt.resume if bt.alive?
   end
 
   steps.times do
-    requests = syncs.values.map { |h| h[:request] }.compact
-    blocks   = syncs.values.map { |h| h[:block] }.compact
+    requests = syncs.values.map { |s| s[:request] }.compact
+    blocks   = syncs.values.map { |s| s[:block] }.compact
 
     allowed = requests.reject { |r| blocks.include?(r) }
     break if allowed.empty?
@@ -19,17 +23,12 @@ def run_bprogram(bthreads, steps = 10)
     # advance only fibers that were involved with chosen
     syncs.keys.each do |bt|
       sync = syncs[bt]
-      next unless sync.is_a?(Hash)
 
-      involved = [sync[:request], sync[:wait], sync[:block]].compact.include?(chosen)
-      if involved
-        syncs[bt] = bt.resume
+      if chosen == sync[:request] or chosen == sync[:wait] or sync[:wait] == Any
+        syncs[bt] = bt.resume(chosen)
         if !bt.alive?
           syncs.delete(bt)
         end
-      else
-        # keep last sync if not advanced
-        syncs[bt] = sync
       end
     end
   end
@@ -51,6 +50,14 @@ no_two_hot = Fiber.new do
   end
 end
 
-bthreads = [hot_bt, cold_bt, no_two_hot]
+no_two_in_a_sequence = Fiber.new do
+  e = Fiber.yield({ wait: Any})
+  loop do
+    e = Fiber.yield({ wait: Any, block: e })
+  end
+end
+
+bthreads = [hot_bt, cold_bt, no_two_in_a_sequence]
 
 run_bprogram(bthreads, 10)
+
