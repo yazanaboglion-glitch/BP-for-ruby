@@ -5,6 +5,36 @@ require "generic_radio_lib.rb"
 safe_GENERIC_RADIO()
 $N = 0
 
+def actuate(e)
+  if e== "HOT"
+        # בדיוק הלוגיקה המקורית + שימוש ב N
+    cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
+    cmd_err_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT")
+    
+    cmd("GENERIC_RADIO GENERIC_RADIO_NOOP_CC with CCSDS_LENGTH #{$N+2}") 
+    
+    get_GENERIC_RADIO_hk()
+    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT == #{cmd_cnt}")
+    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT == #{cmd_err_cnt+1}")
+
+    $N = $N + 1
+   end
+   if e== "COLD"
+     
+    # בדיוק הלוגיקה המקורית + שימוש ב N
+    cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
+    cmd_err_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT")
+    
+    cmd("GENERIC_RADIO GENERIC_RADIO_NOOP_CC with CCSDS_FC #{6+$N}")
+    
+    get_GENERIC_RADIO_hk()
+    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT == #{cmd_cnt}")
+    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT == #{cmd_err_cnt+1}")
+
+    $N = $N + 1
+   end
+end
+
 def run_bprogram(bthreads, steps = 20)
   syncs = {}
 
@@ -23,7 +53,10 @@ def run_bprogram(bthreads, steps = 20)
 
     # בחירה אקראית
     chosen = allowed[rand(allowed.length)]
+    
     puts "Chosen event: #{chosen}"
+    actuate(chosen)
+  
 
     # קידום ה-Fibers
     syncs.keys.each do |bt|
@@ -48,17 +81,6 @@ hot_bt = Fiber.new do
   loop do
     Fiber.yield({ :request => "HOT" })
 
-    # בדיוק הלוגיקה המקורית + שימוש ב N
-    cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
-    cmd_err_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT")
-    
-    cmd("GENERIC_RADIO GENERIC_RADIO_NOOP_CC with CCSDS_LENGTH #{$N+2}") 
-    
-    get_GENERIC_RADIO_hk()
-    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT == #{cmd_cnt}")
-    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT == #{cmd_err_cnt+1}")
-
-    $N = $N + 1
   end
 end
 
@@ -67,17 +89,6 @@ cold_bt = Fiber.new do
   loop do
     Fiber.yield({ :request => "COLD" })
 
-    # בדיוק הלוגיקה המקורית + שימוש ב N
-    cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
-    cmd_err_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT")
-    
-    cmd("GENERIC_RADIO GENERIC_RADIO_NOOP_CC with CCSDS_FC #{6+$N}")
-    
-    get_GENERIC_RADIO_hk()
-    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT == #{cmd_cnt}")
-    check("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT == #{cmd_err_cnt+1}")
-
-    $N = $N + 1
   end
 end
 
@@ -97,3 +108,4 @@ end
 # הפעלה
 bthreads = [hot_bt, cold_bt, interleaver]
 run_bprogram(bthreads, 20)
+
