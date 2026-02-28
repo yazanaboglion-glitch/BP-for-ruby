@@ -37,23 +37,20 @@ def actuate(e)
 end
 
 
-# ---  HOT ( 37-44  ) ---
-hot_bt = Fiber.new do
+valid_bt = Fiber.new do
   loop do
     Fiber.yield({ :request => "VALID" })
 
   end
 end
 
-# ---  COLD ( 46-54  ) ---
-cold_bt = Fiber.new do
+invalid_bt = Fiber.new do
   loop do
     Fiber.yield({ :request => "INVALID" })
 
   end
 end
 
-# --- Interleaver (  ) ---
 interleaver = Fiber.new do
   last_event = nil
   loop do
@@ -67,6 +64,6 @@ interleaver = Fiber.new do
 end
 
 # 
-bthreads = [hot_bt, cold_bt, interleaver]
+bthreads = [valid_bt, invalid_bt, interleaver]
 run_bprogram(bthreads, method(:actuate), 20)
 
