@@ -37,16 +37,16 @@ def actuate(e)
 end
 
 
-valid_bt = Fiber.new do
+INVALID_LENGTH_bt = Fiber.new do
   loop do
-    Fiber.yield({ :request => "VALID" })
+    Fiber.yield({ :request => "INVALID_LENGTH" })
 
   end
 end
 
-invalid_bt = Fiber.new do
+INVALID_FUNCTION_CODE_bt = Fiber.new do
   loop do
-    Fiber.yield({ :request => "INVALID" })
+    Fiber.yield({ :request => "INVALID_FUNCTION_CODE" })
 
   end
 end
@@ -64,6 +64,6 @@ interleaver = Fiber.new do
 end
 
 # 
-bthreads = [valid_bt, invalid_bt, interleaver]
+bthreads = [INVALID_LENGTH_bt, INVALID_FUNCTION_CODE_bt, interleaver]
 run_bprogram(bthreads, method(:actuate), 20)
 
