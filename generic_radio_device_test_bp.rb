@@ -7,7 +7,7 @@ safe_GENERIC_RADIO()
 $N = 0
 def actuate(e)
 
-  if e== "VALID"
+  if e== "INVALID_LENGTH"
         #    +   N
     cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
     cmd_err_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_ERR_COUNT")
@@ -20,7 +20,7 @@ def actuate(e)
 
     $N = $N + 1
    end
-   if e== "INVALID"
+   if e== "INVALID_FUNCTION_CODE"
      
     #    +   N
     cmd_cnt = tlm("GENERIC_RADIO GENERIC_RADIO_HK_TLM CMD_COUNT")
