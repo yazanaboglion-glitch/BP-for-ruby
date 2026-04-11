@@ -87,7 +87,7 @@ phases = [10, 100, 1000]
 
 phases.each do |load|
   total_time = 0.0
-  runs = 3 
+  runs = 30 
   
   runs.times do |run_idx|
     run_time = run_stress_test_phase(load)
@@ -95,7 +95,7 @@ phases.each do |load|
   end
   
   avg_time = total_time / runs
-  puts "[תוצאה סופית] בפעימה של #{load} תהליכים: זמן ממוצע #{avg_time.round(5)} שניות.\n\n"
+  puts "[תוצאה סופית] בפעימה של #{load} תהליכים: זמן ממוצע #{avg_time.round(5)} שניות (מתוך #{runs} הרצות).\n\n"
 end
 
 puts "הניסוי הושלם."
